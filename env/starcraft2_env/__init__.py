@@ -1,0 +1,1 @@
+from env.starcraft2_env.starcraft2_env import *
