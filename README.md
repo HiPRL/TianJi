@@ -71,14 +71,17 @@ N group number represents expansion to N computing groups, A group contains mult
 - `env`: An environment implemented with the system API.
 - `pkgs`: System dependency packages.
 - `utils`: The system function module provides some important components of the system.
+- `docs`: system documentation.
 
 ## For algorithm developers
 
-- environment, If you want to add a customized environment, Inheritance uses the system `BaseEnv` API.
-- algorithm, If you want to add a customized algorithm, you need to know `Agent`、`Embryo` and `Model` three system API.
+- environment, If you want to add a customized environment, Inheritance uses the system `BaseEnv` API, see more [Env doc](docs/environment.md).
+- algorithm, If you want to add a customized algorithm, you need to know `Agent`、`Embryo` and `Model` three system API, see more [algorithm doc](docs/algorithm.md).
 
 ## Authors and acknowledgment
-AAAI2025.
+AAAI2025.【论文链接】
+
+【相关论文链接】
 
 ## License
-[Apache License 2.0]()
+[Apache License 2.0](LICENSE)

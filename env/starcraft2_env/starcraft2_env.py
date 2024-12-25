@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 import os
 
-os.environ["SC2PATH"] = "/home/pdl_lpl/desktop/mnt/pkgs/StarCraftII"
+if "SC2PATH" not in os.environ.keys():
+    os.environ["SC2PATH"] = "/opt/StarCraftII"
 
 from collections import OrderedDict
 
