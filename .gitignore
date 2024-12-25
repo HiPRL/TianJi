@@ -1,0 +1,11 @@
+# ignore vscode tmp file
+.vscode
+
+# ignore .pyc file
+*.pyc
+./*.pyc
+./*/*.pyc
+./*/*/*.pyc
+
+# ignore experiment result
+experiments/
