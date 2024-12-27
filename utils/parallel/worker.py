@@ -332,6 +332,7 @@ class LearnerReducer(Role):
         super(LearnerReducer, self).__init__(simulator, rank, cfg)
         self._fusion_step = 0
         self._fusion_num = cfg.group_num
+        self._stop_step = self.cfg.exit_val.fusion_step
         self.model_list = deque()
         self.fusion_list = deque()
         self.logger = logger
@@ -343,8 +344,10 @@ class LearnerReducer(Role):
 
     def task(self):
         while self.runing_flag:
+            if self._fusion_step > self._stop_step:
+                import os; os._exit(-1)
+            
             self.exec_tirgger("recv_child_params")
-
             if len(self.model_list) >= self._fusion_num:
                 model_data = [self.model_list.pop() for _ in range(self._fusion_num)]
                 for m_k in self.reduce_model.keys():
