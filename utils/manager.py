@@ -93,20 +93,29 @@ class LearnerWork:
             use_timeout=True,
         )
         self.logger.info(
-            f"learner send params success, learner_step: {self.learner.learner_step}."
+            f"learner send params success, learner_step: {self.learner.learner_step}"
         )
 
     def recv_root_params_condition(self):
         assert self.root_comm is not None
         try:
-            model_params = self.root_comm.child_recv(self.root_comm.rank)
-            if model_params:
-                if hasattr(model_params, "get") and model_params.get(
-                    "exit_flag", False
-                ):
-                    self.exit_fmroot()
-                else:
+            # block
+            recv_root_params_flag = False
+            while not recv_root_params_flag:
+                model_params = self.root_comm.child_recv(self.root_comm.rank)
+                if model_params:
                     return model_params
+
+            # # unblock
+            # model_params = self.root_comm.child_recv(self.root_comm.rank)
+            # model_params = self.root_comm.child_recv(self.root_comm.rank)
+            # if model_params:
+            #     if hasattr(model_params, "get") and model_params.get(
+            #         "exit_flag", False
+            #     ):
+            #         self.exit_fmroot()
+            #     else:
+            #         return model_params
         except Exception as e:
             self.logger.warning(f"learner recv root params failed, {e}.")
 
@@ -118,10 +127,10 @@ class LearnerWork:
                 model_params,
                 use_req=True,
                 old_req_list=self.send_params_req,
-                logger=self.logger,
+                use_timeout=True
             )
             self.logger.info(
-                f"child learner async actor params success, learner_step: {self.learner.learner_step}."
+                f"child learner async actor params success, learner_step: {self.learner.learner_step}"
             )
 
     def send_root_params(self, _=None):
@@ -131,7 +140,7 @@ class LearnerWork:
             params,
             self.root_comm.rank,
             self.send_root_params_req,
-            logger=self.logger,
+            use_timeout=True
         )
         self.logger.info(f"learner send params to root success.")
 
@@ -140,6 +149,7 @@ class LearnerWork:
         There are two variables used for judgment, grand_total or learner_step.
         grand_total mean number of times received data from buffer.
         """
+        import os; os._exit(-1)
         self.learner_comm.learner_send_exit()
 
         while True:
@@ -179,6 +189,7 @@ class ActorWork:
         self.cfg = cfg
         self.logger = logger
         self.send_data_req = None
+        self.data_send_flag = False
 
     def run(self):
         self.connect()
@@ -205,6 +216,7 @@ class ActorWork:
                 old_req=self.send_data_req,
                 logger=self.logger,
             )
+            self.data_send_flag = True
         except Exception as e:
             self.logger.warning(f"actor send data to buffer failed. {e}")
         else:
@@ -217,8 +229,18 @@ class ActorWork:
             model_params = self.actor_comm.actor_recv(
                 self.actor.role_rank, use_iprobe=True
             )
-            if model_params:
-                return model_params
+            # # unblock
+            # if model_params:
+            #     return model_params
+
+            # block
+            while self.data_send_flag:
+                model_params = self.actor_comm.actor_recv(
+                    self.actor.role_rank, use_iprobe=True
+                )
+                if model_params:
+                    self.data_send_flag = False
+                    return model_params
         except Exception as e:
             self.logger.warning(f"actor_recv failed, {e}.")
 
@@ -387,7 +409,7 @@ class LearnerReducerWork:
             self.reducer_comm.child_learner_rank,
         )
         self.logger.info(
-            f"reducer send params success, reducer_step: {self.reducer._fusion_step}."
+            f"reducer send params success, reducer_step: {self.reducer._fusion_step}"
         )
 
 
@@ -442,7 +464,7 @@ class Manager(object):
         elif comm.is_actor:
             save_dir = self.cfg.save_dir / f"Actor_{comm.name}_{comm.rank}"
             self.simulator.save_dir = save_dir
-            self.simulator.agent.set_device('cpu')
+            #self.simulator.agent.set_device('cpu')
             self.parallel_cfg.actor_cfg.learn_size = (
                 self.parallel_cfg.learner_cfg.send_interval
             )
