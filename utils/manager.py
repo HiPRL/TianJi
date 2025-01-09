@@ -96,26 +96,29 @@ class LearnerWork:
             f"learner send params success, learner_step: {self.learner.learner_step}"
         )
 
-    def recv_root_params_condition(self):
+    def recv_root_params_condition_force_block(self):
         assert self.root_comm is not None
         try:
-            # block
             recv_root_params_flag = False
             while not recv_root_params_flag:
                 model_params = self.root_comm.child_recv(self.root_comm.rank)
                 if model_params:
                     return model_params
 
-            # # unblock
-            # model_params = self.root_comm.child_recv(self.root_comm.rank)
-            # model_params = self.root_comm.child_recv(self.root_comm.rank)
-            # if model_params:
-            #     if hasattr(model_params, "get") and model_params.get(
-            #         "exit_flag", False
-            #     ):
-            #         self.exit_fmroot()
-            #     else:
-            #         return model_params
+        except Exception as e:
+            self.logger.warning(f"learner recv root params failed, {e}.")
+
+    def recv_root_params_condition(self):
+        assert self.root_comm is not None
+        try:
+            model_params = self.root_comm.child_recv(self.root_comm.rank)
+            if model_params:
+                if hasattr(model_params, "get") and model_params.get(
+                    "exit_flag", False
+                ):
+                    self.exit_fmroot()
+                else:
+                    return model_params
         except Exception as e:
             self.logger.warning(f"learner recv root params failed, {e}.")
 
@@ -193,7 +196,10 @@ class ActorWork:
 
     def run(self):
         self.connect()
-        self.actor.commit_tirgger(self.recv_params_condition, self.recv_params)
+        if self.actor.role.agent.__class__.__name__.lower()  == "ppo":
+            self.actor.commit_tirgger(self.recv_params_condition_force_block, self.recv_params)
+        else:
+            self.actor.commit_tirgger(self.recv_params_condition, self.recv_params)
         self.actor.commit_tirgger(
             lambda: len(self.actor.actor_buffer) >= self.cfg.send_size,
             self.send_data_to_buffer,
@@ -229,11 +235,17 @@ class ActorWork:
             model_params = self.actor_comm.actor_recv(
                 self.actor.role_rank, use_iprobe=True
             )
-            # # unblock
-            # if model_params:
-            #     return model_params
+            if model_params:
+                return model_params
+        except Exception as e:
+            self.logger.warning(f"actor_recv failed, {e}.")
 
-            # block
+    def recv_params_condition_force_block(self):
+        try:
+            model_params = self.actor_comm.actor_recv(
+                self.actor.role_rank, use_iprobe=True
+            )
+
             while self.data_send_flag:
                 model_params = self.actor_comm.actor_recv(
                     self.actor.role_rank, use_iprobe=True
@@ -511,9 +523,14 @@ class Manager(object):
                             == 0,
                             ret.send_root_params,
                         )
-                        ret.learner.commit_sp_tirgger(
-                            ret.recv_root_params_condition, ret.sync_params
-                        )
+                        if ret.learner.role.agent.__class__.__name__.lower() == "ppo":
+                            ret.learner.commit_sp_tirgger(
+                                ret.recv_root_params_condition_force_block, ret.sync_params
+                            )
+                        else:
+                            ret.learner.commit_sp_tirgger(
+                                ret.recv_root_params_condition, ret.sync_params
+                            )
                     ret.run()
 
         for cm in reduce_comm.values():
