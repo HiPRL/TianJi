@@ -7,6 +7,7 @@ from pathlib import Path
 import numpy as np
 
 from drl.utils.buffers import *
+from env.gym_env.wrapper import is_atari
 from utils.simulator import Simulator
 
 __all__ = ["Actor", "Learner", "LearnerReducer"]
@@ -138,30 +139,48 @@ class Actor(Role):
                     actions = self.role.agent.policy(
                         *policy_factor, explore_step=self.learn_times
                     )
+                    self.role.status_, self.role.reward, done, _ = self.role.env.step(
+                        actions
+                    )
+                    self.role.call_hook("before_train_learn")
+                    
+                    self.actor_buffer.push(
+                        self.role._episode,
+                        self.role.status,
+                        actions,
+                        self.role.reward,
+                        self.role.status_,
+                        done,
+                        learn_factor,
+                    )
                 elif self.role.agent.alg_type == "on-policy":
-                    actions, probs = self.role.agent.policy(
+                    actions, probs, value = self.role.agent.policy(
                         *policy_factor, explore_step=self.learn_times
                     )
                     learn_factor.insert(0, probs)
+
+                    self.role.status_, self.role.reward, done, _ = self.role.env.step(
+                        actions
+                    )
+                    self.role.call_hook("before_train_learn")
+                    
+                    self.actor_buffer.push(
+                        self.role._episode,
+                        self.role.status,
+                        actions,
+                        self.role.reward,
+                        self.role.status_,
+                        done,
+                        value,
+                        learn_factor,
+                    )
                 else:
                     raise IOError(
                         "unknown agent algorithm type: %s" % self.role.agent.alg_type
                     )
-                self.role.status_, self.role.reward, done, _ = self.role.env.step(
-                    actions
-                )
-                self.role.call_hook("before_train_learn")
-                self.exec_tirgger("recv_params")
-                self.actor_buffer.push(
-                    self.role._episode,
-                    self.role.status,
-                    actions,
-                    self.role.reward,
-                    self.role.status_,
-                    done,
-                    learn_factor,
-                )
+
                 self.exec_tirgger("send_data_to_buffer")
+                self.exec_tirgger("recv_params")
                 self.role.call_hook("after_train_learn")
                 self.role.scalar_buffer.update(
                     {
@@ -217,13 +236,21 @@ class Actor(Role):
             else:
                 is_win = self.role.episode_flag(self.role.episode_step)
 
-            explore_records.append(
-                f"{cast_time}, {self.role.episode_reward}, {int(is_win)}, {self.role.episode_step}, {self.actor_global_step}\n"
-            )
+            if is_atari(self.role.env.env):
+                if self.role.env.atari_lives_end():
+                    explore_records.append(
+                        f"{cast_time}, {self.role.env.env.original_reward}, {int(is_win)}, {self.role.episode_step}, {self.actor_global_step}\n"
+                    )
+            else:
+                explore_records.append(
+                    f"{cast_time}, {self.role.episode_reward}, {int(is_win)}, {self.role.episode_step}, {self.actor_global_step}\n"
+                )
 
-        with open(self.actor_log_dir / "actor_reward.txt", "w") as fw:
-            for item in explore_records:
-                fw.write(item)
+            if len(explore_records) > 10:
+                with open(self.actor_log_dir / "actor_reward.txt", "a") as fw:
+                    for item in explore_records:
+                        fw.write(item)
+                explore_records = []
 
         self.role.env.close()
         self.logger.info(f"actor_{self.role_rank} work finish.")
@@ -331,8 +358,8 @@ class LearnerReducer(Role):
     def __init__(self, simulator, rank, cfg, logger):
         super(LearnerReducer, self).__init__(simulator, rank, cfg)
         self._fusion_step = 0
-        self._fusion_num = cfg.group_num
         self._stop_step = self.cfg.exit_val.fusion_step
+        self._fusion_num = cfg.group_num
         self.model_list = deque()
         self.fusion_list = deque()
         self.logger = logger
@@ -346,8 +373,9 @@ class LearnerReducer(Role):
         while self.runing_flag:
             if self._fusion_step > self._stop_step:
                 import os; os._exit(-1)
-            
+
             self.exec_tirgger("recv_child_params")
+
             if len(self.model_list) >= self._fusion_num:
                 model_data = [self.model_list.pop() for _ in range(self._fusion_num)]
                 for m_k in self.reduce_model.keys():
@@ -358,7 +386,7 @@ class LearnerReducer(Role):
                 self.fusion_list.append(self.reduce_model)
                 self.role.agent.update_model_params(self.reduce_model)
 
-                if self.role.save_flag(self.fusion_step * self.cfg.exp.save_freq):
+                if self.role.save_flag(self.fusion_step * self.cfg.save_freq):
                     cast_time = float("%.4f" % (time.time() - self.start_t))
                     time_str = time.strftime("%Y%m%d_%H_%M_%S")
                     save_path = (
