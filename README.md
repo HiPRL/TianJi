@@ -6,38 +6,36 @@ TianJi is an effective, scalable and highly parallel reinforcement learning dist
 
 ## Installation
 
-first Install packages using pip：
+first Install packages using pip:
 
 ```
 pip install -r requirements.txt
 ```
 
-second install communication package that in system pkgs dir：
+second install communication package that in system pkgs dir:
 
 ```
 pip install yhcomm-0.0.1-py3-none-any.whl
 ```
 
-Finally, install the mpi library，Note that `MPICH` and `OpenMPI` correspond to `mpi4py` versions。
+finally, install the mpi library, you can choose to install `OpenMPI` or `MPICH`, with the ubuntu system install `OpenMPI`, you can use this command:
+
+```
+sudo apt update
+sudo apt install openmpi-bin openmpi-common libopenmpi-dev
+```
 
 ## Get started
 
 TianJi reinforcement algorithm entry is located under `scripts`, using a simple DQN example to demonstrate how to used TianJi for training.
 
-The first way is to run it directly using a script file:
-
-```
-cd tiranji/scripts
-bash simple_run.sh
-```
-
-The second way is to start training using the command line:
+To start training using the command line:
 
 ```
 python scripts/train.py --source config/dqn/dqn_config.py --exp-name dqn_test
 ```
 
-The training results are generated under `experiments` folder.
+The training results are generated under `experiments` folder when you successfully start training.
 
 ## Distributed training
 
@@ -48,10 +46,14 @@ TianJi distributed training relies on computing hardware and is currently only s
 Take the simple dqn for example:
 
 ```
-python scripts/train.py --source config/dqn/dqn_config_distributed.py --exp-name dqn_dist 
+mpirun -np 6 python scripts/train.py --source config/dqn/dqn_config_distributed.py --exp-name dqn_dist 
 ```
 
-If you want to do outward bound on a larger scale, add the Group parameter to the configuration file.
+process number N  is related to the configuration **parallel_parameters**, N involves a simple calculation: N = learner_num + actor_num + buffer_num.
+
+In this mode, the learner_num and buffer_num are specified as 1.
+
+If you want to do outward bound on a larger scale, e.g. to increase the number of **learner**,  add the computational Group parameter to the configuration file.
 
 ```
     global_cfg = dict(
@@ -60,7 +62,13 @@ If you want to do outward bound on a larger scale, add the Group parameter to th
     )
 ```
 
-N group number represents expansion to N computing groups, A group contains multiple roles.
+Training Command:
+
+```
+mpirun -np 21 python scripts/train.py --source config/dqn/dqn_config_group_distributed.py --exp-name dqn_dist 
+```
+
+N group number represents expansion to N computing groups, A group contains multiple role, so process number = group_num * (learner_num + actor_num + buffer_num) + 1.
 
 ## Code Structure
 
@@ -79,9 +87,8 @@ N group number represents expansion to N computing groups, A group contains mult
 - algorithm, If you want to add a customized algorithm, you need to know `Agent`、`Embryo` and `Model` three system API, see more [algorithm doc](docs/algorithm.md).
 
 ## Authors and acknowledgment
-AAAI2025.【论文链接】
-
-【相关论文链接】
+AAAI2025.
 
 ## License
 [Apache License 2.0](LICENSE)
+
