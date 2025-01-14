@@ -537,6 +537,7 @@ class Manager(object):
             if global_comm.distinguish_comm(cm) and cm.is_master_learner:
                 save_dir = self.cfg.save_dir / f"Learner_Manager"
                 self.simulator.save_dir = save_dir
+                self.parallel_cfg.global_cfg.save_freq = self.cfg.exp.save_freq
                 logger = make_logger(
                     f"LearnerManager",
                     save_dir / "log" / (f"Learner_Manager" + "_log.log"),

@@ -385,7 +385,6 @@ class LearnerReducer(Role):
                 self._fusion_step += 1
                 self.fusion_list.append(self.reduce_model)
                 self.role.agent.update_model_params(self.reduce_model)
-                print(self.cfg, flush=True)
                 if self.role.save_flag(self.fusion_step * self.cfg.save_freq):
                     cast_time = float("%.4f" % (time.time() - self.start_t))
                     time_str = time.strftime("%Y%m%d_%H_%M_%S")
