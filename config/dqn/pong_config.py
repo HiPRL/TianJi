@@ -3,9 +3,10 @@
 # 一、environment（环境参数）
 environment = dict(
     type = 'GymEnv',
-    gym_name = "BoxingNoFrameskip-v4", # gym env selection
+    gym_name = "PongNoFrameskip-v4", # gym env selection
     render = False,
     wrappers = [dict(type="MonitorEnv"),
+                dict(type="AtariOriginalReward"),
                 dict(type="NoopResetEnv"),
                 dict(type="MaxAndSkipEnv"),
                 dict(type="EpisodicLifeEnv"),
@@ -40,7 +41,7 @@ hyp = dict(
 # 四、agent（搭建智能体）
 model = dict(
     type='AtariModel',
-    act_dim=18, # action dim
+    act_dim=6, # action dim
 )
 embryo = dict(
     type='DQNHead',
