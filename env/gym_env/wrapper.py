@@ -30,7 +30,7 @@ __all__ = ['wrapper_table']
 _gym_atari_wrappers = [wrap_deepmind, MonitorEnv, NoopResetEnv, FireResetEnv, EpisodicLifeEnv,
                        MaxAndSkipEnv, ClipRewardEnv, ClipActionsWrapper, WarpFrame, ScaledFloatFrame, FrameStackOrder]
 
-_gym_wrappers = [AtariPreprocessing, ClipAction, FilterObservation, FlattenObservation, FrameStack,
+_gym_wrappers = [AtariOriginalReward, AtariPreprocessing, ClipAction, FilterObservation, FlattenObservation, FrameStack,
                  LazyFrames, GrayScaleObservation, Monitor, PixelObservationWrapper, RecordEpisodeStatistics,
                  RescaleAction, ResizeObservation, TimeAwareObservation, TimeLimit, TransformObservation, TransformReward]
 

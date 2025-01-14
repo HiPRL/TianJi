@@ -48,6 +48,27 @@ def get_wrapper_by_cls(env, cls):
         else:
             return None
 
+class AtariOriginalReward(gym.Wrapper):
+    def __init__(self, env=None):
+        self._episode_reward = 0
+        gym.Wrapper.__init__(self, env)
+
+    def reset(self, **kwargs):
+        obs = self.env.reset(**kwargs)
+        self._episode_reward = 0
+        return obs
+
+    def step(self, action):
+        obs, rew, done, info = self.env.step(action)
+        info["original_reward"] = rew
+        self._episode_reward += rew
+
+        return obs, rew, done, info
+    
+    @property
+    def original_reward(self):
+        return self._episode_reward
+
 class MonitorEnv(gym.Wrapper):
     def __init__(self, env=None):
         """Record episodes stats prior to EpisodicLifeEnv, etc."""
