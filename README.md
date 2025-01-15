@@ -25,6 +25,8 @@ sudo apt update
 sudo apt install openmpi-bin openmpi-common libopenmpi-dev
 ```
 
+To install more training scenarios, see [Env doc](docs/environment.md).
+
 ## Get started
 
 TianJi reinforcement algorithm entry is located under `scripts`, using a simple DQN example to demonstrate how to used TianJi for training.
@@ -32,7 +34,7 @@ TianJi reinforcement algorithm entry is located under `scripts`, using a simple 
 To start training using the command line:
 
 ```
-python scripts/train.py --source config/dqn/dqn_config.py --exp-name dqn_test
+python scripts/train.py --source config/dqn/cartpole_config.py --exp-name dqn_test
 ```
 
 The training results are generated under `experiments` folder when you successfully start training.
@@ -46,7 +48,7 @@ TianJi distributed training relies on computing hardware and is currently only s
 Take the simple dqn for example:
 
 ```
-mpirun -np 6 python scripts/train.py --source config/dqn/dqn_config_distributed.py --exp-name dqn_dist 
+mpirun -np 6 python scripts/train.py --source config/dqn/cartpole_distribution.py --exp-name dqn_dist 
 ```
 
 process number N  is related to the configuration **parallel_parameters**, N involves a simple calculation: N = learner_num + actor_num + buffer_num.
@@ -65,7 +67,7 @@ If you want to do outward bound on a larger scale, e.g. to increase the number o
 Training Command:
 
 ```
-mpirun -np 21 python scripts/train.py --source config/dqn/dqn_config_group_distributed.py --exp-name dqn_dist 
+mpirun -np 21 python scripts/train.py --source config/dqn/cartpole_group_distribution.py --exp-name dqn_dist 
 ```
 
 N group number represents expansion to N computing groups, A group contains multiple role, so process number = group_num * (learner_num + actor_num + buffer_num) + 1.
