@@ -25,7 +25,7 @@ reward_episode_opt = np.sum
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Learner eval.")
-    parser.add_argument("--source", type=str, default="./config/dqn/dqn_config.py", help="experiment param config file")
+    parser.add_argument("--source", type=str, default="./config/dqn/cartpole_config.py", help="experiment param config file")
     parser.add_argument('--exp', nargs='?', const=True, default=False, help='training task name.')
     parser.add_argument("--times", type=int, default=1, help="eval time.")
     return parser.parse_args()

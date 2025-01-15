@@ -74,7 +74,6 @@ N group number represents expansion to N computing groups, A group contains mult
 
 ## Code Structure
 
-- `benchmark`: Some experimental configurations of benchmark.
 - `config`: Configuration files for algorithms and environments.
 - `scripts`: Main entry.
 - `drl`: Model、algorithms and policy implemented using system API.

@@ -15,7 +15,7 @@ def parse_args():
     parser.add_argument(
         "--exp",
         type=str,
-        default="experiments/1dqn_cartpole",
+        default="experiments/exp",
         help="training task name.",
     )
     parser.add_argument("--batchsize", type=int, default=32, help="batch size.")

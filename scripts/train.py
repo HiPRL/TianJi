@@ -29,7 +29,7 @@ def parse_args():
         help="experiment param config file",
     )
     parser.add_argument(
-        "--exp-name", type=str, default="dqn", help="name of the experiment"
+        "--exp-name", type=str, default="cartpole_dqn_exp", help="name of the experiment"
     )
     parser.add_argument(
         "--resume",

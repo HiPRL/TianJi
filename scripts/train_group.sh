@@ -78,4 +78,4 @@ done
 
 
 # evalution
-# python eval_actor.py --exp experiments --exp-name $exp_name --finish-reward $finish_reward --mode multi_actor --exp-prefix 1,2,4,8,16,32 --exp-suffix "$exp_num,$exp_num,$exp_num,$exp_num,$exp_num,$exp_num"
+# python scripts/eval_actor.py --exp experiments --exp-name $exp_name --finish-reward $finish_reward --mode multi_actor --exp-prefix 1,2,4,8,16,32 --exp-suffix "$exp_num,$exp_num,$exp_num,$exp_num,$exp_num,$exp_num"
