@@ -25,7 +25,7 @@ def parse_args():
     parser.add_argument(
         "--source",
         type=str,
-        default="./config/dqn/dqn_config.py",
+        default="./config/dqn/cartpole_config.py",
         help="experiment param config file",
     )
     parser.add_argument(
