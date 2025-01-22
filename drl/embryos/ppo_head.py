@@ -36,92 +36,105 @@ class PPOHead(Embryo):
         )
 
     def update(self, *args, **kwargs):
-        (
-            batch_state,
-            batch_action,
-            batch_reward,
-            batch_next_state,
-            batch_terminal,
-            probs,
-        ) = self.get_memory()
-        batch_state = torch.tensor(batch_state, dtype=torch.float).to(self.sync_device)
-        batch_action = torch.tensor(batch_action, dtype=torch.long).to(self.sync_device)
-        batch_reward = torch.tensor(batch_reward, dtype=torch.float).to(self.sync_device)
-        batch_next_state = torch.tensor(batch_next_state, dtype=torch.float).to(
-            self.sync_device
-        )
-        batch_terminal = torch.tensor(batch_terminal, dtype=torch.bool).to(self.sync_device)
-        batch_old_probs = torch.tensor(probs[0], dtype=torch.float).to(self.sync_device)
+        batch_state, batch_action, batch_reward, batch_next_state, batch_terminal, value, probs = self.get_memory()
+        batch_state = torch.tensor(batch_state, dtype=torch.float).squeeze()
+        batch_action = torch.tensor(batch_action, dtype=torch.long).squeeze()
+        batch_reward = torch.tensor(batch_reward, dtype=torch.float).squeeze()
+        batch_next_state = torch.tensor(batch_next_state, dtype=torch.float).squeeze()
+        batch_terminal = torch.tensor(batch_terminal, dtype=torch.bool).squeeze()
+        batch_old_probs = torch.tensor(probs[0], dtype=torch.float).squeeze()
+        batch_old_value = torch.tensor(value, dtype=torch.float).squeeze()
+        
+        batch_adv = torch.zeros(self.batch_size, self.step_len, dtype=torch.float32)  
+        batch_target_value = torch.zeros(self.batch_size, self.step_len, dtype=torch.float32)  
+        for bt_id in range(self.batch_size):
+            reward = batch_reward[bt_id].detach()
+            done = batch_terminal[bt_id].detach()
+            value = batch_old_value[bt_id].detach()
 
-        batch_adg_reward = []
-        for i, rewards in enumerate(batch_reward):
-            adg_rewards = []
-            discounted_reward = 0
-            terminals = batch_terminal[i]
-            for rw, is_terminal in zip(reversed(rewards), reversed(terminals)):
-                if is_terminal:
-                    discounted_reward = 0
-                discounted_reward = rw + (self.gamma * discounted_reward)
-                adg_rewards.insert(0, discounted_reward)
-            batch_adg_reward.append(adg_rewards)
+            _, next_v = self.policy_model.forward(batch_next_state[bt_id])
+            value = torch.cat((value, next_v.detach()[-1]))   # value add last_value
+            next_value = value[1:]
+            value = value[:-1]
+            discount = ~done * self.gamma
+            delta_t = reward + discount * next_value - value
+            adv = delta_t
 
-        nor_rewards = torch.tensor(batch_adg_reward, dtype=torch.float32).to(
-            self.sync_device
-        )
-        nor_rewards = (nor_rewards - nor_rewards.mean()) / (nor_rewards.std() + 1e-7)
-        old_state_values = (
-            self.target_model.critic_forward(batch_state).squeeze().detach()
-        )
-        advantages = nor_rewards.detach() - old_state_values.detach()
+            for j in range(len(adv) - 2, -1, -1):
+                adv[j] += adv[j + 1] * discount[j] * self.gae_lambda
 
+            target_value = adv + value
+
+            batch_adv[bt_id] = adv
+            batch_target_value[bt_id] = target_value
+        
         # reshape
-        advantages = advantages.reshape(self.batch_size * self.step_len)
-        batch_old_probs = batch_old_probs.reshape(self.batch_size * self.step_len)
-        batch_state = batch_state.reshape(
-            self.batch_size * self.step_len, batch_state.shape[-1]
-        )
-        batch_action = batch_action.reshape(self.batch_size * self.step_len)
-        nor_rewards = nor_rewards.reshape(self.batch_size * self.step_len)
+        batch_state = batch_state
+        batch_action = batch_action
+        batch_old_probs = batch_old_probs
+        batch_old_value = batch_old_value
+        clipped_len = self.step_len 
+
+        if len(batch_state.shape) > 3:
+            # atari
+            batch_state = batch_state.reshape(self.batch_size * clipped_len, batch_state.shape[-3], batch_state.shape[-2], batch_state.shape[-1])
+        else:
+            batch_state = batch_state.reshape(self.batch_size * clipped_len, batch_state.shape[-1])
+        batch_action = batch_action.reshape(self.batch_size * clipped_len)
+        batch_old_probs = batch_old_probs.reshape(self.batch_size * clipped_len)
+        batch_old_values = batch_old_value.reshape(self.batch_size * clipped_len)
+
+        batch_adv = batch_adv.reshape(self.batch_size * clipped_len)
+        batch_target_value = batch_target_value.reshape(self.batch_size * clipped_len)
 
         update_loss = 0
+        mini_batch = 200
+        nbatch = self.batch_size * clipped_len
+        inds = np.arange(nbatch)
+        np.random.shuffle(inds)
         for _ in range(self.update_step):
-            action_new_probs = self.policy_model.actor_forward(batch_state)
-            action_dist = torch.distributions.Categorical(action_new_probs.squeeze())
-            action_log_prob = action_dist.log_prob(batch_action)
-            action_dist_entropy = action_dist.entropy()
-            v = self.policy_model.critic_forward(batch_state)
+            for start in range(0, nbatch, mini_batch):
+                end = start + mini_batch
+                mbinds = inds[start:end]
+                states = batch_state[mbinds]
+                actions = batch_action[mbinds]
+                old_probs = batch_old_probs[mbinds]
+                advs = batch_adv[mbinds]
+                target_values = batch_target_value[mbinds]
+                old_values = batch_old_values[mbinds]
 
-            ratio = torch.exp(action_log_prob - batch_old_probs)
-            surr1 = ratio * advantages
-            surr2 = (
-                torch.clamp(ratio, 1 - self.clip_param, 1 + self.clip_param)
-                * advantages
-            )
-            loss = (
-                -torch.min(surr1, surr2)
-                + self.mse_loss(v.squeeze(), nor_rewards) * 0.5
-                - action_dist_entropy * 0.01
-            )
-            update_loss += loss
+                action_new_probs, v = self.policy_model.forward(states)
+                v = v.squeeze()
+                action_dist = torch.distributions.Categorical(action_new_probs.squeeze())
+                action_log_prob = action_dist.log_prob(actions)
+                action_dist_entropy = action_dist.entropy()
 
-            self.optimizer.zero_grad()
-            loss.mean().backward()
-            self.optimizer.step()
+                ratio = torch.exp(action_log_prob - old_probs)
+                surr1 = ratio * advs
+                surr2 = torch.clamp(ratio, 1 - self.clip_param, 1 + self.clip_param) * advs
+                
+                vf_losses1 = torch.pow(v - target_values, 2)
+                val_pred_clipped = old_values + torch.clamp(v - old_values, min=-5, max=5)
+                vf_losses2 = torch.pow(val_pred_clipped - target_values, 2)
+                critic_loss = 0.5 * torch.mean(torch.max(vf_losses1, vf_losses2))
+
+                loss = -torch.min(surr1, surr2) + critic_loss - action_dist_entropy * 0.01
+                update_loss += loss.mean().detach()
+
+                self.optimizer.zero_grad()
+                loss.mean().backward(retain_graph=True)
+                self.optimizer.step()
 
         self.policy_model.sync_weights_to(self.target_model)
         return update_loss / self.update_step
 
-    def execute(self, state, use_target_model=False):
-        state = torch.unsqueeze(torch.FloatTensor(state), 0).to(self.sync_device)
-        action_prob = (
-            self.target_model.actor_forward(state)
-            if use_target_model
-            else self.policy_model.actor_forward(state)
-        )
-        action_dist = torch.distributions.Categorical(action_prob.squeeze())
+    def execute(self, state):
+        state = torch.unsqueeze(torch.FloatTensor(state).squeeze(), 0)
+        action_prob, step_v_out = self.policy_model.forward(state)
+        action_dist = torch.distributions.Categorical(action_prob.detach().squeeze())
         action = action_dist.sample()
-        action_log_prob = action_dist.log_prob(action).sum(-1, keepdim=True)
-        return action, action_log_prob
+        action_log_prob = action_dist.log_prob(action)
+        return action, action_log_prob, step_v_out.detach()
 
     def save_memory(self, *args):
         assert self.memory is not None
@@ -129,10 +142,10 @@ class PPOHead(Embryo):
 
     def get_memory(self):
         assert self.memory is not None
-        # return self.memory.convert(self.memory.pop(self.batch_size))  # used but dropped
-        return self.memory.convert(
-            random.sample(list(self.memory), self.batch_size)
-        )  # used but saved
+        return self.memory.convert(self.memory.pop(self.batch_size))  # used but dropped
+        # return self.memory.convert(
+        #     random.sample(list(self.memory), self.batch_size)
+        # )  # used but saved
 
     def clear_memory(self):
         assert self.memory is not None

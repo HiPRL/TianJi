@@ -57,7 +57,10 @@ hooks = [
 parallel_parameters = dict(
     global_cfg = dict(
         use_group_parallel = True,
-        group_num = 2
+        group_num = 2,
+        exit_val = dict(
+            fusion_step = 80000,
+        ),
     ),
     learner_cfg = dict(
         num = 1,

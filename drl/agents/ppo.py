@@ -17,8 +17,8 @@ class PPO(Agent):
         super(PPO, self).__init__(embryo, alg_type)
 
     def predict(self, status, _=None):
-        action, probs = self.embryo.execute(np.array(status))
-        return action.cpu().detach().numpy().squeeze(), probs.cpu().detach().numpy().squeeze()
+        action, probs, value = self.embryo.execute(np.array(status))
+        return action.cpu().detach().numpy().squeeze(), probs.cpu().detach().numpy().squeeze(), value.cpu().detach().numpy().squeeze()
     
     def learn(self, *args, **kwargs):
         if args:
