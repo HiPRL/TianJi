@@ -26,7 +26,8 @@ class Simulator(Enginer):
             if self.agent.alg_type == "off-policy":
                 actions = self.agent.policy(*policy_factor)
             elif self.agent.alg_type == "on-policy":
-                actions, probs = self.agent.policy(*policy_factor)
+                actions, probs, value = self.agent.policy(*policy_factor)
+                learn_factor.insert(0, value)
                 learn_factor.insert(0, probs)
             else:
                 raise TypeError(
@@ -123,7 +124,7 @@ class Simulator(Enginer):
                 if self.agent.alg_type == "off-policy":
                     actions = self.agent.predict(*policy_factor)
                 elif self.agent.alg_type == "on-policy":
-                    actions, _ = self.agent.predict(*policy_factor)
+                    actions, *_ = self.agent.predict(*policy_factor)
                 else:
                     raise TypeError(
                         "unknown agent algorithm type: %s" % self.agent.alg_type

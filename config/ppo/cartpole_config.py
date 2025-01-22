@@ -33,10 +33,9 @@ hyp = dict(
 
 # 四、agent（搭建智能体）
 model = dict(
-    type='PPOActorCritic',
-    actor_state_dim=4,
-    actor_action_dim=2,
-    critic_state_dim=4,
+    type="PPOActorCritic",
+    state_dim=4,
+    action_dim=2,
     mlp_dim=64,
 )
 embryo = dict(

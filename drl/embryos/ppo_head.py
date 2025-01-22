@@ -36,14 +36,14 @@ class PPOHead(Embryo):
         )
 
     def update(self, *args, **kwargs):
-        batch_state, batch_action, batch_reward, batch_next_state, batch_terminal, value, probs = self.get_memory()
+        batch_state, batch_action, batch_reward, batch_next_state, batch_terminal, other_args = self.get_memory()
         batch_state = torch.tensor(batch_state, dtype=torch.float).squeeze()
         batch_action = torch.tensor(batch_action, dtype=torch.long).squeeze()
         batch_reward = torch.tensor(batch_reward, dtype=torch.float).squeeze()
         batch_next_state = torch.tensor(batch_next_state, dtype=torch.float).squeeze()
         batch_terminal = torch.tensor(batch_terminal, dtype=torch.bool).squeeze()
-        batch_old_probs = torch.tensor(probs[0], dtype=torch.float).squeeze()
-        batch_old_value = torch.tensor(value, dtype=torch.float).squeeze()
+        batch_old_probs = torch.tensor(other_args[1], dtype=torch.float).squeeze()
+        batch_old_value = torch.tensor(other_args[0], dtype=torch.float).squeeze()
         
         batch_adv = torch.zeros(self.batch_size, self.step_len, dtype=torch.float32)  
         batch_target_value = torch.zeros(self.batch_size, self.step_len, dtype=torch.float32)  

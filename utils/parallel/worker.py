@@ -157,6 +157,7 @@ class Actor(Role):
                     actions, probs, value = self.role.agent.policy(
                         *policy_factor, explore_step=self.learn_times
                     )
+                    learn_factor.insert(0, value)
                     learn_factor.insert(0, probs)
 
                     self.role.status_, self.role.reward, done, _ = self.role.env.step(
@@ -171,7 +172,6 @@ class Actor(Role):
                         self.role.reward,
                         self.role.status_,
                         done,
-                        value,
                         learn_factor,
                     )
                 else:
@@ -385,6 +385,7 @@ class LearnerReducer(Role):
                 self._fusion_step += 1
                 self.fusion_list.append(self.reduce_model)
                 self.role.agent.update_model_params(self.reduce_model)
+
                 if self.role.save_flag(self.fusion_step * self.cfg.save_freq):
                     cast_time = float("%.4f" % (time.time() - self.start_t))
                     time_str = time.strftime("%Y%m%d_%H_%M_%S")
