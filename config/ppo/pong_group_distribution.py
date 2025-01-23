@@ -24,7 +24,7 @@ exp = dict(
     eval_step = 100000 # evaluate episode interval
 )
 
-ACTOR_NUM = 4
+ACTOR_NUM = 2
 
 # 三、Hyper Parameters（训练超参）
 hyp = dict(
@@ -67,7 +67,7 @@ hooks = [
 parallel_parameters = dict(
     global_cfg = dict(
         use_group_parallel = True,
-        group_num = 2,
+        group_num = 1,
         save_freq = 10,
         exit_val = dict(
             fusion_step = 4500, 
@@ -84,7 +84,7 @@ parallel_parameters = dict(
         ),
     ),
     actor_cfg = dict(
-        num = 1,
+        num = ACTOR_NUM,
         send_size = 1,
     ),
     buffer_cfg = dict(

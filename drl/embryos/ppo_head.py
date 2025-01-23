@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 import copy
-import random
-
-import numpy as np
 import torch
 import torch.nn as nn
+import numpy as np
+
 from drl.base.embryo import Embryo
 from drl.builder import EMBRYOS
 from drl.utils.buffers import MultiStepBuffer
 
-__all__ = ["PPOHead"]
+
+
+__all__ = ['PPOHead']
+
 
 
 @EMBRYOS.register_module()
@@ -21,7 +23,7 @@ class PPOHead(Embryo):
         self.lr = hyp.lr
         self.clip_param = hyp.clip_param
         self.gamma = hyp.gamma
-        self.gae_lambda = hyp.gae_lambda
+        self.gae_lambda = hyp.gae_lambda    # lam
         self.update_step = hyp.update_step
         self.batch_size = hyp.batch_size
         self.step_len = hyp.step_len
@@ -31,20 +33,22 @@ class PPOHead(Embryo):
 
         self.memory = MultiStepBuffer(self.buffer_size, hyp.step_len)
         self.mse_loss = nn.MSELoss()
-        self.optimizer = torch.optim.Adam(
-            self.policy_model.parameters(), lr=self.lr, eps=1e-5
-        )
+        self.optimizer = torch.optim.Adam(self.policy_model.parameters(), lr=self.lr)
+
+        # self.train_flag = False
+
 
     def update(self, *args, **kwargs):
-        batch_state, batch_action, batch_reward, batch_next_state, batch_terminal, other_args = self.get_memory()
+        batch_state, batch_action, batch_reward, batch_next_state, batch_terminal, batch_other_args = self.get_memory()
+        probs, value = batch_other_args[0], batch_other_args[1]
+
         batch_state = torch.tensor(batch_state, dtype=torch.float).squeeze()
         batch_action = torch.tensor(batch_action, dtype=torch.long).squeeze()
         batch_reward = torch.tensor(batch_reward, dtype=torch.float).squeeze()
         batch_next_state = torch.tensor(batch_next_state, dtype=torch.float).squeeze()
         batch_terminal = torch.tensor(batch_terminal, dtype=torch.bool).squeeze()
-        batch_old_probs = torch.tensor(other_args[1], dtype=torch.float).squeeze()
-        batch_old_value = torch.tensor(other_args[0], dtype=torch.float).squeeze()
-        
+        batch_old_probs = torch.tensor(probs, dtype=torch.float).squeeze()
+        batch_old_value = torch.tensor(value, dtype=torch.float).squeeze()
         batch_adv = torch.zeros(self.batch_size, self.step_len, dtype=torch.float32)  
         batch_target_value = torch.zeros(self.batch_size, self.step_len, dtype=torch.float32)  
         for bt_id in range(self.batch_size):
@@ -127,6 +131,7 @@ class PPOHead(Embryo):
 
         self.policy_model.sync_weights_to(self.target_model)
         return update_loss / self.update_step
+    
 
     def execute(self, state):
         state = torch.unsqueeze(torch.FloatTensor(state).squeeze(), 0)
@@ -135,18 +140,19 @@ class PPOHead(Embryo):
         action = action_dist.sample()
         action_log_prob = action_dist.log_prob(action)
         return action, action_log_prob, step_v_out.detach()
+    
 
     def save_memory(self, *args):
-        assert self.memory is not None
+        assert(self.memory is not None)
         self.memory.push(*args)
 
+
     def get_memory(self):
-        assert self.memory is not None
-        return self.memory.convert(self.memory.pop(self.batch_size))  # used but dropped
-        # return self.memory.convert(
-        #     random.sample(list(self.memory), self.batch_size)
-        # )  # used but saved
+        assert(self.memory is not None)
+        # return self.memory.sample_batch(self.batch_size)
+        return self.memory.convert(self.memory.pop(self.batch_size))
+    
 
     def clear_memory(self):
-        assert self.memory is not None
+        assert(self.memory is not None)
         self.memory.clear()

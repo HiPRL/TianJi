@@ -33,7 +33,7 @@ class PPO(Agent):
             return loss, self.learn_step
     
     def is_learn(self):
-        return self.embryo.memory.is_overflow if self.embryo.warmup_size is None else len(self.embryo.memory) > self.embryo.warmup_size
+        return self.embryo.memory.is_overflow if self.embryo.warmup_size is None else len(self.embryo.memory) >= self.embryo.warmup_size
 
     def policy(self, status, action_dim, explore_step=None):
         if self.embryo.warmup_full_random and not self.is_learn() and explore_step is None:
