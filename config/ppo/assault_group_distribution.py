@@ -84,7 +84,7 @@ parallel_parameters = dict(
         ),
     ),
     actor_cfg = dict(
-        num = 1,
+        num = ACTOR_NUM,
         send_size = 1,
     ),
     buffer_cfg = dict(
