@@ -13,8 +13,9 @@ __all__ = ['PPOAtari']
 
 @MODELS.register_module()
 class PPOAtari(Model):
-    def __init__(self, state_dim, action_dim, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, state_dim, action_dim, init_method: str = None, **kwargs):
+        super().__init__(init_method=init_method, **kwargs)
+
         self.num_actions = action_dim
         
         network = [
@@ -32,12 +33,6 @@ class PPOAtari(Model):
         
         self.network = nn.Sequential(*network)
         self.softmax = nn.Softmax(dim=1)
-
-    def init_params(self):
-        init_func = kaiming_init
-        for m in self.modules():
-            if isinstance(m, (nn.Linear, nn.Conv2d)):
-                init_func(m)
 
     def forward(self, states):
         policy, value = torch.split(self.network(states),(self.num_actions, 1), dim=1)
