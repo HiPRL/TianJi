@@ -1,5 +1,4 @@
 import warnings
-from env.builder import *
 
 try:
     from env.gym_env.gym_env import *

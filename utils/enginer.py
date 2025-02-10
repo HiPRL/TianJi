@@ -86,7 +86,7 @@ class Enginer(metaclass=ABCMeta):
             del self.eval_env
 
         try:
-            from env import build_env
+            from env.builder import build_env
 
             self.eval_env = build_env(self.cfg.environment)
         except:
@@ -111,7 +111,7 @@ class Enginer(metaclass=ABCMeta):
             _cfg = deepcopy(self.cfg)
 
             try:
-                from env import build_env
+                from env.builder import build_env
 
                 _env = build_env(_cfg.environment)
             except:
@@ -120,7 +120,7 @@ class Enginer(metaclass=ABCMeta):
             try:
                 _agent = deepcopy(self.agent)
             except:
-                from drl import build_agent
+                from drl.builder import build_agent
 
                 _agent = build_agent(_cfg.agent)
 
@@ -148,9 +148,6 @@ class Enginer(metaclass=ABCMeta):
             self._hooks.insert(0, hook)
 
     def register_hook_from_cfg(self):
-        import drl.hooks
-        import utils.hooks
-
         hook_cfg = [] if not hasattr(self.cfg, "hooks") else self.cfg.hooks.copy()
         hook_cfgs = hook_cfg if isinstance(hook_cfg, list) else [hook_cfg]
         if len(hook_cfgs) > 0:

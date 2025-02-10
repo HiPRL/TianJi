@@ -10,8 +10,8 @@ from collections import deque
 from drl.agents import *
 from drl.embryos import *
 from drl.models import *
-from env import build_env
-from drl import build_agent
+from env.builder import build_env
+from drl.builder import build_agent
 from utils import Config
 from utils.simulator import Simulator
 from utils.common import check_config_attr
