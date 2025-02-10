@@ -1,6 +1,12 @@
 # ignore vscode tmp file
 .vscode
 
+# ignore coverage file
+*.coverage
+./*.coverage
+./*/*.coverage
+./*/*/*.coverage
+
 # ignore .pyc file
 *.pyc
 ./*.pyc
