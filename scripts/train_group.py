@@ -6,9 +6,6 @@ import argparse
 from pathlib import Path
 
 from drl.builder import build_agent
-from drl.agents import *
-from drl.embryos import *
-from drl.models import *
 from env.builder import build_env
 from utils import Config
 from utils.common import (
