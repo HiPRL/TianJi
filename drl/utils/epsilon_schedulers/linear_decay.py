@@ -10,7 +10,8 @@ class LinearDecayEpsilonScheduler(EpsilonScheduler):
     def __init__(self, start_epsilon, end_epsilon, max_step, min_step=1):
         assert 0 <= start_epsilon <= 1
         assert 0 <= end_epsilon <= 1
-        assert 0 <= min_step <= max_step
+        assert 0 < min_step <= max_step, "min_step must be less than max_step"
+        # assert 0 <= min_step <= max_step
         self.start_epsilon = start_epsilon
         self.end_epsilon = end_epsilon
         self.max_step = max_step
@@ -20,7 +21,8 @@ class LinearDecayEpsilonScheduler(EpsilonScheduler):
     def step(self, x):
         if x < self.min_step:
             return self.start_epsilon
-        if x > self.max_step:
+        # if x > self.max_step:
+        if x >= self.max_step or self.min_step == self.max_step:  # 处理 min_step == max_step 的情况
             return self.end_epsilon
         return self.start_epsilon + (self.end_epsilon - self.start_epsilon) * ((x - self.min_step) / (self.max_step - self.min_step))
     

@@ -18,7 +18,16 @@ class GaussianVibrateExplore(Vibrate):
 
     def sample(self, a, to_numpy=False):
         a = a() if callable(a) else a
-        a = torch.from_numpy(a) if isinstance(a, np.ndarray) else a
+        # a = torch.from_numpy(a) if isinstance(a, np.ndarray) else a
+        
+        # 确保 a 是 NumPy 数组或 PyTorch 张量
+        if isinstance(a, np.ndarray):
+            a = torch.from_numpy(a)  # 将 NumPy 数组转换为 PyTorch 张量
+        elif isinstance(a, torch.Tensor):
+            pass  # 如果已经是 PyTorch 张量，无需处理
+        else:
+            raise TypeError("Input must be a NumPy array or a PyTorch tensor.")
+        
         noise = torch.normal(mean=self.mean, std=self.std, size=a.shape)
         if self.low is not None or self.high is not None:
             sample_data = torch.clamp(a + noise, self.low, self.high)

@@ -17,3 +17,4 @@ class ConstantEpsilonScheduler(EpsilonScheduler):
     def explore(self, x, random_action_func, greedy_action_func):
         action, _ = self.epsilon_greedy(self.epsilon_value, random_action_func, greedy_action_func)
         return action
+        # return action, _  #测试用

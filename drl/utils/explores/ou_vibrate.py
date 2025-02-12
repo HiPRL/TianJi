@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import inspect
+import torch
 import numpy as np
 from drl.utils.explores.vibrate import Vibrate
 
@@ -18,6 +19,15 @@ class OrnsteinUhlenbeckVibrateExplore(Vibrate):
 
     def sample(self, a):
         a = a() if inspect.isfunction(a) else a
+
+        # 确保 a 是 NumPy 数组或 PyTorch 张量
+        if isinstance(a, np.ndarray):
+            pass  # 如果已经是 NumPy 数组，无需处理
+        elif isinstance(a, torch.Tensor):
+            a = a.numpy()  # 将 PyTorch 张量转换为 NumPy 数组
+        else:
+            raise TypeError("Input must be a NumPy array or a PyTorch tensor.")
+        
         if self.ou_value is None:
             std = self.sigma / np.sqrt(2 * self.theta - self.theta ** 2)
             self.ou_value = np.random.normal(loc=self.mean, scale=std, size=a.shape).astype(np.float32)
