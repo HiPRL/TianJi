@@ -48,7 +48,7 @@ class MPIDistributed(DrlMpi):
 
     def __init__(self, comm=None, *args, **kwargs):
         super().__init__(comm, *args, **kwargs)
-        self.buffer_timeout, self.actor_timeout, self.learner_timeout = 256, 128, 256
+        self.buffer_timeout, self.actor_timeout, self.learner_timeout = 1000, 2200, 2
 
     def learner_send(
         self,
@@ -236,7 +236,7 @@ class MPIDistributed(DrlMpi):
 class MPIModelCastWithMasterSlave(MasterSlaveWithMPI):
     def __init__(self, comm=None, *args, **kwargs):
         super(MPIModelCastWithMasterSlave, self).__init__(comm, *args, **kwargs)
-        self.learner_timeout, self.root_learner_timeout = 256, 256
+        self.learner_timeout, self.root_learner_timeout = 10, 3400
 
     def root_send(
         self,
