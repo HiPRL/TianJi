@@ -87,7 +87,8 @@ class MPIDistributed(DrlMpi):
         else:
             for rank_index in self.actor_rank:
                 if use_buffer:
-                    self.comm.Send_init(data, dest=rank_index, tag=10 + rank_index)
+                    req = self.comm.Send_init(data, dest=rank_index, tag=10 + rank_index)
+                    return req
                 else:
                     self.send(
                         data, rank_index, mpi_tag=10 + rank_index, blocking=is_block
