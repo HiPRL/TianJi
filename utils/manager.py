@@ -419,6 +419,8 @@ class LearnerReducerWork:
             params,
             self.send_child_params_req,
             self.reducer_comm.child_learner_rank,
+            block=False, 
+            use_timeout=True,
         )
         self.logger.info(
             f"reducer send params success, reducer_step: {self.reducer._fusion_step}"
