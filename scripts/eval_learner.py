@@ -7,9 +7,6 @@ import matplotlib.pyplot as plt
 from glob import glob
 from collections import deque
 
-from drl.agents import *
-from drl.embryos import *
-from drl.models import *
 from env.builder import build_env
 from drl.builder import build_agent
 from utils import Config
