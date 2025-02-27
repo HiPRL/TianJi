@@ -16,7 +16,7 @@ second install communication package that in system pkgs dir:
 
 ```
 cd pkgs
-pip install yhcomm-0.0.1-py3-none-any.whl
+pip install hiprlcomm-0.0.1-py3-none-any.whl
 ```
 
 finally, install the mpi library, you can choose to install `OpenMPI` or `MPICH`, with the ubuntu system install `OpenMPI`, you can use this command:
@@ -90,14 +90,13 @@ N group number represents expansion to N computing groups, A group contains mult
 
 ## Authors and acknowledgment
 ```
-@inproceedings{tianji,
+@inproceedings{
+  tianji,
   title={Highly Parallelized Reinforcement Learning Training with Relaxed Assignment Dependencies},
-  author={},
+  author={Zhouyu He and Peng Qiao and Rongchun Li and Yong Dou and Yusong Tan},
   booktitle={Proceedings of the AAAI Conference on Artificial Intelligence},
-  volume={39},
-  number={xx},
-  pages={xxx--xxx},
-  year={2025}
+  year={2025}，
+  url={}
 }
 ```
 

@@ -4,9 +4,9 @@ import time
 from typing import Callable
 
 try:
-    from yhcomm import DrlMpi, MasterSlaveWithMPI
+    from hiprlcomm import DrlMpi, MasterSlaveWithMPI
 except:
-    raise AttributeError("To use MPI, yhcomm package must be installed.")
+    raise AttributeError("To use MPI, hiprlcomm package must be installed.")
 
 
 def torch_dispath_process_func(role=None):
