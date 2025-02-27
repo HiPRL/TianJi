@@ -15,6 +15,7 @@ pip install -r requirements.txt
 second install communication package that in system pkgs dir:
 
 ```
+cd pkgs
 pip install yhcomm-0.0.1-py3-none-any.whl
 ```
 
@@ -88,7 +89,17 @@ N group number represents expansion to N computing groups, A group contains mult
 - algorithm, If you want to add a customized algorithm, you need to know `Agent`、`Embryo` and `Model` three system API, see more [algorithm doc](docs/algorithm.md).
 
 ## Authors and acknowledgment
-AAAI2025.
+```
+@inproceedings{tianji,
+  title={Highly Parallelized Reinforcement Learning Training with Relaxed Assignment Dependencies},
+  author={},
+  booktitle={Proceedings of the AAAI Conference on Artificial Intelligence},
+  volume={39},
+  number={xx},
+  pages={xxx--xxx},
+  year={2025}
+}
+```
 
 ## License
 [Apache License 2.0](LICENSE)
