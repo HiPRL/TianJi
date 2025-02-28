@@ -94,9 +94,9 @@ N group number represents expansion to N computing groups, A group contains mult
   tianji,
   title={Highly Parallelized Reinforcement Learning Training with Relaxed Assignment Dependencies},
   author={Zhouyu He and Peng Qiao and Rongchun Li and Yong Dou and Yusong Tan},
-  booktitle={Proceedings of the AAAI Conference on Artificial Intelligence},
+  booktitle={Proceedings of the Thirty-Ninth AAAI Conference on Artificial Intelligence},
   year={2025}，
-  url={}
+  url={http://arxiv.org/abs/2502.20190}
 }
 ```
 
