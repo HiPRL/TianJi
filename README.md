@@ -86,7 +86,9 @@ The group number (group_num for short) represents scaling to N computing groups.
 - environment, If you want to add a customized environment, Inheritance uses the system `BaseEnv` API, see more [Env doc](docs/environment.md).
 - algorithm, If you want to add a customized algorithm, you need to know `Agent`、`Embryo` and `Model` three system API, see more [algorithm doc](docs/algorithm.md).
 
-## Authors and acknowledgment
+## Citation
+If you find our work helpful, feel free to give us a cite.
+
 ```
 @inproceedings{
   title={Highly Parallelized Reinforcement Learning Training with Relaxed Assignment Dependencies},
